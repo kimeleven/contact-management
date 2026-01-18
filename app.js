@@ -1,7 +1,7 @@
 // Supabase 설정
 // https://supabase.com 에서 프로젝트를 생성하고 아래 값을 교체하세요
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://xdxbboqvtpbalbxmvpfz.supabase.co';
+const SUPABASE_ANON_KEY = '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';
 
 let supabase;
 if (!window._supabaseClient) {
