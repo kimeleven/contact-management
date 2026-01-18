@@ -4,10 +4,6 @@ const SUPABASE_URL = 'https://xdxbboqvtpbalbxmvpfz.supabase.co';
 const SUPABASE_ANON_KEY = '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';
 
 let supabase;
-if (!window._supabaseClient) {
-  window._supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-supabase = window._supabaseClient;
 
 // 상태 관리
 let currentUser = null;
@@ -16,43 +12,100 @@ let allContacts = [];
 let isEditMode = false;
 
 // DOM 요소
-const loginContainer = document.getElementById('loginContainer');
-const mainContainer = document.getElementById('mainContainer');
-const googleLoginBtn = document.getElementById('googleLoginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const userEmail = document.getElementById('userEmail');
-const searchInput = document.getElementById('searchInput');
-const addContactBtn = document.getElementById('addContactBtn');
-const contactsList = document.getElementById('contactsList');
-const detailView = document.getElementById('detailView');
-const emptyState = document.getElementById('emptyState');
-const contactModal = document.getElementById('contactModal');
-const modalTitle = document.getElementById('modalTitle');
-const contactForm = document.getElementById('contactForm');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const cancelFormBtn = document.getElementById('cancelFormBtn');
-const deleteModal = document.getElementById('deleteModal');
-const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const loadingSpinner = document.getElementById('loadingSpinner');
+let loginContainer;
+let mainContainer;
+let googleLoginBtn;
+let logoutBtn;
+let userEmail;
+let searchInput;
+let addContactBtn;
+let contactsList;
+let detailView;
+let emptyState;
+let contactModal;
+let modalTitle;
+let contactForm;
+let closeModalBtn;
+let cancelFormBtn;
+let deleteModal;
+let cancelDeleteBtn;
+let confirmDeleteBtn;
+let loadingSpinner;
 
 // 입력 필드
-const contactName = document.getElementById('contactName');
-const contactPhone = document.getElementById('contactPhone');
-const contactEmail = document.getElementById('contactEmail');
-const contactMemo = document.getElementById('contactMemo');
+let contactName;
+let contactPhone;
+let contactEmail;
+let contactMemo;
 
 // 상세 보기 필드
-const detailName = document.getElementById('detailName');
-const detailPhone = document.getElementById('detailPhone');
-const detailEmail = document.getElementById('detailEmail');
-const detailMemo = document.getElementById('detailMemo');
-const editContactBtn = document.getElementById('editContactBtn');
-const deleteContactBtn = document.getElementById('deleteContactBtn');
+let detailName;
+let detailPhone;
+let detailEmail;
+let detailMemo;
+let editContactBtn;
+let deleteContactBtn;
+
+// ===== DOM 요소 초기화 =====
+function initDOMElements() {
+  loginContainer = document.getElementById('loginContainer');
+  mainContainer = document.getElementById('mainContainer');
+  googleLoginBtn = document.getElementById('googleLoginBtn');
+  logoutBtn = document.getElementById('logoutBtn');
+  userEmail = document.getElementById('userEmail');
+  searchInput = document.getElementById('searchInput');
+  addContactBtn = document.getElementById('addContactBtn');
+  contactsList = document.getElementById('contactsList');
+  detailView = document.getElementById('detailView');
+  emptyState = document.getElementById('emptyState');
+  contactModal = document.getElementById('contactModal');
+  modalTitle = document.getElementById('modalTitle');
+  contactForm = document.getElementById('contactForm');
+  closeModalBtn = document.getElementById('closeModalBtn');
+  cancelFormBtn = document.getElementById('cancelFormBtn');
+  deleteModal = document.getElementById('deleteModal');
+  cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  loadingSpinner = document.getElementById('loadingSpinner');
+
+  // 입력 필드
+  contactName = document.getElementById('contactName');
+  contactPhone = document.getElementById('contactPhone');
+  contactEmail = document.getElementById('contactEmail');
+  contactMemo = document.getElementById('contactMemo');
+
+  // 상세 보기 필드
+  detailName = document.getElementById('detailName');
+  detailPhone = document.getElementById('detailPhone');
+  detailEmail = document.getElementById('detailEmail');
+  detailMemo = document.getElementById('detailMemo');
+  editContactBtn = document.getElementById('editContactBtn');
+  deleteContactBtn = document.getElementById('deleteContactBtn');
+}
+
+// ===== Supabase 클라이언트 초기화 =====
+function initSupabase() {
+  if (typeof window.supabase === 'undefined') {
+    console.error('Supabase 라이브러리가 로드되지 않았습니다.');
+    return false;
+  }
+
+  if (!window._supabaseClient) {
+    window._supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  supabase = window._supabaseClient;
+  return true;
+}
 
 // ===== 초기화 =====
 async function init() {
   try {
+    // Supabase 클라이언트 초기화 확인
+    if (!initSupabase()) {
+      console.error('Supabase 초기화 실패');
+      return;
+    }
+
     // 현재 세션 확인
     const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -430,43 +483,85 @@ function updateEmptyState() {
   }
 }
 
-// ===== 이벤트 리스너 =====
-googleLoginBtn.addEventListener('click', handleGoogleLogin);
-logoutBtn.addEventListener('click', handleLogout);
-addContactBtn.addEventListener('click', openAddContactForm);
-editContactBtn.addEventListener('click', openEditContactForm);
-deleteContactBtn.addEventListener('click', openDeleteConfirm);
-closeModalBtn.addEventListener('click', closeModal);
-cancelFormBtn.addEventListener('click', closeModal);
-cancelDeleteBtn.addEventListener('click', () => {
-  deleteModal.style.display = 'none';
-});
-confirmDeleteBtn.addEventListener('click', confirmDelete);
-contactForm.addEventListener('submit', handleFormSubmit);
-searchInput.addEventListener('input', (e) => {
-  handleSearch(e.target.value);
-});
 
-// 모달 밖의 영역을 클릭하면 닫기
-contactModal.addEventListener('click', (e) => {
-  if (e.target === contactModal) {
-    closeModal();
+// ===== 이벤트 리스너 등록 =====
+function setupEventListeners() {
+  if (googleLoginBtn) {
+    googleLoginBtn.addEventListener('click', handleGoogleLogin);
   }
-});
-
-deleteModal.addEventListener('click', (e) => {
-  if (e.target === deleteModal) {
-    deleteModal.style.display = 'none';
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
   }
-});
-
-// Escape 키로 모달 닫기
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeModal();
-    deleteModal.style.display = 'none';
+  if (addContactBtn) {
+    addContactBtn.addEventListener('click', openAddContactForm);
   }
-});
+  if (editContactBtn) {
+    editContactBtn.addEventListener('click', openEditContactForm);
+  }
+  if (deleteContactBtn) {
+    deleteContactBtn.addEventListener('click', openDeleteConfirm);
+  }
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+  }
+  if (cancelFormBtn) {
+    cancelFormBtn.addEventListener('click', closeModal);
+  }
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener('click', () => {
+      deleteModal.style.display = 'none';
+    });
+  }
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', confirmDelete);
+  }
+  if (contactForm) {
+    contactForm.addEventListener('submit', handleFormSubmit);
+  }
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      handleSearch(e.target.value);
+    });
+  }
 
-// 앱 초기화
-init();
+  // 모달 밖의 영역을 클릭하면 닫기
+  if (contactModal) {
+    contactModal.addEventListener('click', (e) => {
+      if (e.target === contactModal) {
+        closeModal();
+      }
+    });
+  }
+
+  if (deleteModal) {
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.style.display = 'none';
+      }
+    });
+  }
+
+  // Escape 키로 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      if (deleteModal) {
+        deleteModal.style.display = 'none';
+      }
+    }
+  });
+}
+
+// 앱 초기화 - DOM이 로드된 후 실행
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initDOMElements();
+    setupEventListeners();
+    init();
+  });
+} else {
+  // DOM이 이미 로드된 경우
+  initDOMElements();
+  setupEventListeners();
+  init();
+}
