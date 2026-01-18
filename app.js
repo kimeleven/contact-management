@@ -101,6 +101,37 @@ function initSupabase() {
   return true;
 }
 
+// ===== OAuth 콜백 처리 =====
+async function handleOAuthCallback() {
+  try {
+    // URL에 OAuth 콜백 파라미터가 있는지 확인
+    const hashParams = window.location.hash;
+    if (hashParams && (hashParams.includes('access_token') || hashParams.includes('error'))) {
+      // Supabase가 URL 파라미터를 처리하도록 함
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('OAuth 콜백 처리 오류:', error);
+        // URL에서 해시 제거
+        window.history.replaceState(null, '', window.location.pathname);
+        return false;
+      }
+
+      if (data.session) {
+        // 성공적으로 로그인됨 - URL 정리
+        window.history.replaceState(null, '', window.location.pathname);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('OAuth 콜백 처리 중 오류:', error);
+    // URL에서 해시 제거
+    window.history.replaceState(null, '', window.location.pathname);
+    return false;
+  }
+}
+
 // ===== 초기화 =====
 async function init() {
   try {
@@ -109,6 +140,9 @@ async function init() {
       console.error('Supabase 초기화 실패');
       return;
     }
+
+    // OAuth 콜백 처리 (URL에 토큰이 있는 경우)
+    const isOAuthCallback = await handleOAuthCallback();
 
     // 현재 세션 확인
     const { data: { session }, error } = await supabase.auth.getSession();
@@ -169,8 +203,9 @@ async function handleGoogleLogin() {
   try {
     showLoading();
     
-    // 현재 URL의 origin을 사용하여 리다이렉트 URI 설정
-    const redirectUrl = `${window.location.origin}${window.location.pathname}`;
+    // 현재 페이지의 전체 URL을 리다이렉트 URI로 사용
+    // pathname을 포함하여 정확한 경로로 리다이렉트
+    const redirectUrl = window.location.href.split('#')[0]; // 해시 제거
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -186,6 +221,8 @@ async function handleGoogleLogin() {
     if (error) {
       throw error;
     }
+    // OAuth 리다이렉트가 시작되므로 여기서 함수가 종료됨
+    // 사용자는 Google 로그인 페이지로 이동하고, 인증 후 redirectUrl로 돌아옴
   } catch (error) {
     console.error('Google 로그인 오류:', error);
     const loginError = document.getElementById('loginError');

@@ -106,7 +106,9 @@ CREATE POLICY "Users can delete their own contacts"
    - **Redirect URLs**에 다음을 모두 추가:
      - 프로덕션: `https://claude-test-2vgg.vercel.app/**`
      - 로컬 개발: `http://localhost:8000/**` (또는 사용하는 포트)
+     - 다른 포트 사용 시: `http://localhost:3000/**` 등
      - 와일드카드(`/**`)를 사용하여 모든 경로 허용
+     - ⚠️ **중요**: 사용하는 모든 로컬 포트를 추가해야 합니다!
 4. Save를 클릭합니다.
 
 ## 5. 애플리케이션 설정
@@ -195,8 +197,16 @@ vercel
    - **Redirect URLs**에 다음이 모두 포함되어 있는지 확인:
      - `https://claude-test-2vgg.vercel.app/**` (프로덕션)
      - `http://localhost:8000/**` (로컬 개발)
+     - `http://localhost:3000/**` (다른 포트 사용 시)
+     - 사용하는 모든 로컬 포트를 추가해야 합니다
 
-3. **일반적인 확인사항**:
+3. **OAuth 콜백 후 잘못된 URL로 리다이렉트되는 경우**:
+   - Supabase → Authentication → URL Configuration
+   - Redirect URLs에 현재 사용 중인 URL이 포함되어 있는지 확인
+   - 예: `http://localhost:3000`으로 리다이렉트된다면 `http://localhost:3000/**` 추가
+   - 코드에서 OAuth 콜백을 자동으로 처리하도록 업데이트됨 (URL 파라미터 정리)
+
+4. **일반적인 확인사항**:
    - Google Cloud Console에서 클라이언트 ID가 올바른지 확인
    - Supabase에서 Google 제공자가 활성화되어 있는지 확인
    - 브라우저 개발자 도구(F12)의 콘솔에서 오류 메시지 확인
