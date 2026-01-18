@@ -3,6 +3,10 @@
 const SUPABASE_URL = 'https://xdxbboqvtpbalbxmvpfz.supabase.co';
 const SUPABASE_ANON_KEY = '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';
 
+// 즉시 실행 함수로 스코프 분리하여 변수 충돌 방지
+(function() {
+'use strict';
+
 let supabase;
 
 // 상태 관리
@@ -565,3 +569,5 @@ if (document.readyState === 'loading') {
   setupEventListeners();
   init();
 }
+
+})(); // 즉시 실행 함수 종료
