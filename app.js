@@ -168,10 +168,18 @@ function hideLoading() {
 async function handleGoogleLogin() {
   try {
     showLoading();
+    
+    // 현재 URL의 origin을 사용하여 리다이렉트 URI 설정
+    const redirectUrl = `${window.location.origin}${window.location.pathname}`;
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     });
 
@@ -181,7 +189,13 @@ async function handleGoogleLogin() {
   } catch (error) {
     console.error('Google 로그인 오류:', error);
     const loginError = document.getElementById('loginError');
-    loginError.textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
+    
+    // 더 구체적인 오류 메시지 표시
+    if (error.message && error.message.includes('redirect_uri_mismatch')) {
+      loginError.textContent = '리다이렉트 URI 설정 오류입니다. Google Cloud Console에서 설정을 확인해주세요.';
+    } else {
+      loginError.textContent = '로그인에 실패했습니다. 다시 시도해주세요.';
+    }
     loginError.style.display = 'block';
     hideLoading();
   }

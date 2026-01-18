@@ -52,6 +52,8 @@ const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
 ### 3. 실행
 
+#### 로컬 개발
+
 ```bash
 # Python 3 사용
 python -m http.server 8000
@@ -61,6 +63,11 @@ npx http-server
 ```
 
 브라우저에서 `http://localhost:8000` 접속
+
+#### 프로덕션 배포
+
+애플리케이션은 Vercel에 배포되어 있습니다:
+- **배포 URL**: https://claude-test-2vgg.vercel.app
 
 ## 💡 사용 방법
 

@@ -83,11 +83,13 @@ CREATE POLICY "Users can delete their own contacts"
 1. API 및 서비스 → 사용자 인증 정보를 클릭합니다.
 2. 사용자 인증 정보 만들기 → OAuth 2.0 클라이언트 ID를 클릭합니다.
 3. 애플리케이션 유형: "웹 애플리케이션"을 선택합니다.
-4. 승인된 리다이렉트 URI에 추가합니다:
+4. **승인된 리다이렉트 URI에 다음을 추가합니다** (⚠️ 매우 중요):
    - `https://YOUR_SUPABASE_PROJECT.supabase.co/auth/v1/callback`
-   - 예: `https://abcdefgh.supabase.co/auth/v1/callback`
+   - 예: `https://xdxbboqvtpbalbxmvpfz.supabase.co/auth/v1/callback`
+   - ⚠️ **주의**: 정확한 Supabase 프로젝트 URL을 사용해야 합니다. 오타가 있으면 `redirect_uri_mismatch` 오류가 발생합니다.
+   - ⚠️ **Vercel 배포 시**: Supabase 콜백 URI만 추가하면 됩니다. Vercel URL은 Supabase에서 처리합니다.
 5. 생성을 클릭합니다.
-6. **클라이언트 ID** 복사합니다.
+6. **클라이언트 ID**와 **클라이언트 Secret**을 복사합니다 (Secret은 나중에 필요할 수 있습니다).
 
 ### 4.3 Supabase에서 Google OAuth 연동
 
@@ -95,7 +97,17 @@ CREATE POLICY "Users can delete their own contacts"
 2. Google을 활성화합니다:
    - Enabled: 활성화
    - Client ID: Google에서 복사한 클라이언트 ID 붙여넣기
-3. Save를 클릭합니다.
+   - Client Secret: Google에서 복사한 클라이언트 Secret 붙여넣기 (선택사항이지만 권장)
+3. **Site URL 설정 확인** (매우 중요):
+   - Authentication → URL Configuration으로 이동
+   - **Site URL**: 프로덕션 배포 URL 설정
+     - Vercel 배포: `https://claude-test-2vgg.vercel.app`
+     - 또는 다른 프로덕션 URL
+   - **Redirect URLs**에 다음을 모두 추가:
+     - 프로덕션: `https://claude-test-2vgg.vercel.app/**`
+     - 로컬 개발: `http://localhost:8000/**` (또는 사용하는 포트)
+     - 와일드카드(`/**`)를 사용하여 모든 경로 허용
+4. Save를 클릭합니다.
 
 ## 5. 애플리케이션 설정
 
@@ -114,6 +126,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
 ## 6. 애플리케이션 실행
 
+### 로컬 개발
+
 1. `index.html` 파일을 웹 브라우저에서 엽니다.
 2. 또는 간단한 HTTP 서버를 사용합니다:
 
@@ -131,6 +145,22 @@ http-server
 
 3. 브라우저에서 `http://localhost:8000`으로 접속합니다.
 
+### Vercel 배포
+
+애플리케이션은 다음 URL에서 배포되어 있습니다:
+- **프로덕션 URL**: `https://claude-test-2vgg.vercel.app`
+
+Vercel에 배포하려면:
+1. Vercel 계정 생성 및 로그인
+2. GitHub 저장소 연결
+3. 프로젝트 설정 후 배포
+
+또는 Vercel CLI 사용:
+```bash
+npm i -g vercel
+vercel
+```
+
 ## 7. 기능 확인
 
 - ✅ Google 로그인
@@ -141,9 +171,36 @@ http-server
 ## 문제 해결
 
 ### Google 로그인이 작동하지 않음
-- Google Cloud Console에서 클라이언트 ID가 올바른지 확인
-- Supabase에서 Google 제공자가 활성화되어 있는지 확인
-- 브라우저 개발자 도구(F12)의 콘솔에서 오류 메시지 확인
+
+#### `redirect_uri_mismatch` 오류 해결 방법:
+
+1. **Google Cloud Console 확인**:
+   - API 및 서비스 → 사용자 인증 정보 → OAuth 2.0 클라이언트 ID 클릭
+   - 승인된 리다이렉트 URI에 다음이 정확히 등록되어 있는지 확인:
+     ```
+     https://YOUR_SUPABASE_PROJECT.supabase.co/auth/v1/callback
+     ```
+     예: `https://xdxbboqvtpbalbxmvpfz.supabase.co/auth/v1/callback`
+   - ⚠️ **주의사항**:
+     - `https://`로 시작해야 함
+     - `/auth/v1/callback`으로 끝나야 함
+     - 프로젝트 URL이 정확해야 함 (오타 없이)
+     - 마지막에 슬래시(`/`)가 없어야 함
+     - **Vercel URL은 Google Cloud Console에 추가하지 않습니다!** (Supabase가 처리)
+
+2. **Supabase 설정 확인**:
+   - Authentication → URL Configuration
+   - **Site URL**: 프로덕션 URL 설정
+     - Vercel 배포: `https://claude-test-2vgg.vercel.app`
+   - **Redirect URLs**에 다음이 모두 포함되어 있는지 확인:
+     - `https://claude-test-2vgg.vercel.app/**` (프로덕션)
+     - `http://localhost:8000/**` (로컬 개발)
+
+3. **일반적인 확인사항**:
+   - Google Cloud Console에서 클라이언트 ID가 올바른지 확인
+   - Supabase에서 Google 제공자가 활성화되어 있는지 확인
+   - 브라우저 개발자 도구(F12)의 콘솔에서 오류 메시지 확인
+   - 브라우저 캐시를 지우고 다시 시도
 
 ### 데이터가 저장되지 않음
 - Supabase 대시보드에서 RLS 정책이 올바르게 설정되어 있는지 확인
